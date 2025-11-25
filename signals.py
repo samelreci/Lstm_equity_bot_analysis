@@ -1,15 +1,39 @@
-def generate_signals(predictions_unscaled, y_test_unscaled):
+import pandas as pd
+import numpy as np
+
+
+def generate_signals(predictions_unscaled, y_test_unscaled: pd.Series):
+    """Generate simple long-only entry/exit signals from predictions.
+
+    Parameters
+    ----------
+    predictions_unscaled : array-like
+        1D array of predicted prices for the test window.
+    y_test_unscaled : pd.Series
+        Actual (unscaled) prices for the same window.
+
+    Returns
+    -------
+    signals : list of tuples
+        Each element is (entry_price, exit_price, percentage_return).
+    y_signal : pd.Series
+        Alias to y_test_unscaled (for compatibility).
+    """
+
+    predictions = np.asarray(predictions_unscaled).reshape(-1)
+    if not isinstance(y_test_unscaled, pd.Series):
+        # convert to Series without index if plain array is passed
+        y_signal = pd.Series(y_test_unscaled)
+    else:
+        y_signal = y_test_unscaled
+
     signals = []
     entry_price = None
     exit_price = None
 
-    y_signal = y_test_unscaled 
-
-    for i, prediction in enumerate(predictions_unscaled):
-        if i == 0:
-            continue
-
-        prev_prediction = predictions_unscaled[i - 1]
+    for i in range(1, len(predictions)):
+        prediction = predictions[i]
+        prev_prediction = predictions[i - 1]
 
         # Prediction going up → Enter / re-enter long
         if prediction > prev_prediction:
